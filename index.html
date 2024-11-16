@@ -1,0 +1,745 @@
+<html><head><base href="." />
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #1a1a1a;
+    font-family: 'Inconsolata', monospace;
+  }
+
+  .magic-button {
+    padding: 15px 30px;
+    font-size: 24px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(145deg, #2a2a2a, #232323);
+    color: #ffffff;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 5px 15px rgba(0,0,0,0.3),
+      0 10px 20px rgba(0,0,0,0.2),
+      inset 0 1px 2px rgba(255,255,255,0.1);
+  }
+
+  .magic-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 20px rgba(0,0,0,0.4),
+      0 15px 30px rgba(0,0,0,0.3),
+      inset 0 1px 2px rgba(255,255,255,0.2);
+  }
+
+  .magic-button:active {
+    transform: translateY(1px);
+  }
+
+  @keyframes buttonMorphing {
+    0% { clip-path: circle(50%); }
+    25% { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+    50% { clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%); }
+    75% { clip-path: ellipse(50% 50% at 50% 50%); }
+    100% { clip-path: circle(50%); }
+  }
+
+  .magic-button.morphing {
+    animation: buttonMorphing 3s infinite alternate;
+  }
+
+  .magic-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(255,255,255,0.1),
+      transparent
+    );
+    transition: 0.5s;
+  }
+
+  .magic-button:hover::before {
+    left: 100%;
+  }
+
+  .magic-text {
+    background: linear-gradient(
+      90deg,
+      #ff0000,
+      #ff7f00,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #4b0082,
+      #8f00ff
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: rainbow 3s linear infinite;
+    display: inline;
+  }
+
+  @keyframes rainbow {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  .spark {
+    position: absolute;
+    pointer-events: none;
+    background: white;
+    border-radius: 50%;
+    mix-blend-mode: screen;
+    animation: spark-animation 1s ease-out forwards;
+  }
+
+  @keyframes spark-animation {
+    0% {
+      transform: translate(0, 0) scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--tx), var(--ty)) scale(0.1);
+      opacity: 0;
+    }
+  }
+
+  .counter {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(42, 42, 42, 0.9);
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Inconsolata', monospace;
+    font-size: 18px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 4px 12px rgba(0,0,0,0.2),
+      inset 0 1px 2px rgba(255,255,255,0.1);
+  }
+
+  .counter.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .counter-number {
+    display: inline-block;
+    background: linear-gradient(
+      90deg,
+      #ff0000,
+      #ff7f00,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #4b0082,
+      #8f00ff
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: rainbow 3s linear infinite;
+    font-weight: bold;
+    margin-left: 5px;
+  }
+
+  .magic-hint {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(42, 42, 42, 0.95);
+    padding: 15px 25px;
+    border-radius: 12px;
+    color: white;
+    font-family: 'Inconsolata', monospace;
+    font-size: 16px;
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+      0 8px 20px rgba(0,0,0,0.3),
+      inset 0 1px 2px rgba(255,255,255,0.1);
+    max-width: 300px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .magic-hint.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .magic-hint .highlight {
+    font-weight: bold;
+    background: linear-gradient(
+      90deg,
+      #ff0000,
+      #ff7f00,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #4b0082,
+      #8f00ff
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: rainbow 3s linear infinite;
+  }
+
+  @keyframes melt {
+    0% { transform: scale(1); filter: none; }
+    50% { transform: scale(1.2) skew(10deg); filter: blur(5px); }
+    100% { transform: scale(1); filter: none; }
+  }
+
+  @keyframes pastelShift {
+    0% { background: #FFB3BA; }
+    25% { background: #BAFFC9; }
+    50% { background: #BAE1FF; }
+    75% { background: #FFFFBA; }
+    100% { background: #FFB3BA; }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+  }
+
+  @keyframes spiral {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(720deg) scale(0); }
+  }
+
+  @keyframes flutter {
+    0% { transform: translateY(0) rotate(0); }
+    25% { transform: translateY(-10px) rotate(5deg); }
+    75% { transform: translateY(10px) rotate(-5deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+
+  .bubble {
+    position: fixed;
+    pointer-events: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    box-shadow: inset -5px -5px 15px rgba(255,255,255,0.4);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .fish {
+    position: absolute;
+    width: 10px;
+    height: 5px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 50%;
+    animation: swim 4s linear infinite;
+  }
+
+  .wing {
+    position: absolute;
+    width: 20px;
+    height: 30px;
+    background: linear-gradient(45deg, #fff, transparent);
+    animation: flutter 2s ease-in-out infinite;
+  }
+
+  /* Adding new keyframes and styles for drastic transformations */
+  @keyframes extreme-rainbow {
+    0% { filter: hue-rotate(0deg) contrast(150%) brightness(150%); }
+    100% { filter: hue-rotate(360deg) contrast(200%) brightness(200%); }
+  }
+
+  @keyframes glitch {
+    0% { transform: none; }
+    2% { transform: translate(2px, -2px) skew(3deg); }
+    4% { transform: translate(-2px, 2px) skew(-3deg); }
+    6% { transform: none; }
+  }
+
+  @keyframes wobble {
+    0% { transform: none; }
+    100% { transform: rotate(720deg) scale(2) translate(100px, -100px); }
+  }
+
+  @keyframes reality-break {
+    0% { transform: none; filter: none; }
+    25% { transform: scale(1.2) rotate(5deg); filter: hue-rotate(90deg) blur(2px); }
+    50% { transform: scale(0.8) rotate(-5deg); filter: hue-rotate(180deg) blur(0px); }
+    75% { transform: scale(1.1) rotate(10deg); filter: hue-rotate(270deg) blur(4px); }
+    100% { transform: none; filter: hue-rotate(360deg) blur(0px); }
+  }
+
+  @keyframes psychedelic {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 200%; }
+  }
+
+  @keyframes buttonPulse {
+    0% { transform: scale(1); border-radius: 8px; }
+    50% { transform: scale(1.1); border-radius: 25px; }
+    100% { transform: scale(1); border-radius: 8px; }
+  }
+
+  .reality-break {
+    animation: reality-break 2s infinite;
+  }
+
+  .extreme-mode {
+    animation: melt 2s infinite alternate;
+  }
+
+  .ultra-mode {
+    animation: extreme-rainbow 1s infinite linear;
+  }
+
+  .chaos-mode {
+    animation: glitch 0.3s infinite steps(1);
+  }
+
+  .final-mode {
+    animation: wobble 3s infinite alternate-reverse;
+  }
+
+  /* More extreme button styles for higher counts */
+  .magic-button.extreme {
+    background: conic-gradient(from 0deg, red, yellow, lime, aqua, blue, magenta, red);
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&family=Press+Start+2P&family=Pacifico&family=VT323&family=Permanent+Marker&family=Comic+Neue&family=Shadows+Into+Light&family=Rubik+Glitch&family=Nabla&family=Silkscreen&display=swap" rel="stylesheet">
+</head>
+<body>
+  <button class="magic-button">
+    press me, for <span class="magic-text">magic</span>
+  </button>
+
+  <div class="counter">
+    Magical Presses: <span class="counter-number">0</span>
+  </div>
+
+  <div class="magic-hint">
+    Every press does something <span class="highlight">MAGICAL</span>, there are <span class="highlight">MAGIC NUMBERS</span>, these change <span class="highlight">EVERYTHING</span>!
+  </div>
+
+  <script>
+    const button = document.querySelector('.magic-button');
+    const counter = document.querySelector('.counter');
+    const counterNumber = document.querySelector('.counter-number');
+    const magicHint = document.querySelector('.magic-hint');
+    let pressCount = 0;
+    let hasShownInitialHint = false;
+
+    // Array of font families to cycle through
+    const fonts = [
+      'Inconsolata',
+      'Press Start 2P',
+      'Pacifico',
+      'VT323',
+      'Permanent Marker',
+      'Comic Neue',
+      'Shadows Into Light',
+      'Rubik Glitch',
+      'Nabla',
+      'Silkscreen'
+    ];
+
+    // Website styles for magic numbers
+    const magicStyles = [
+      {
+        background: '#1a1a1a',
+        buttonGradient: 'linear-gradient(145deg, #2a2a2a, #232323)',
+        textColor: '#ffffff'
+      },
+      {
+        background: 'repeating-radial-gradient(circle at 10% 10%, #ff69b4, #4b0082 50%)',
+        buttonGradient: 'linear-gradient(145deg, #ff1493, #ff69b4)',
+        textColor: '#ffffff'
+      },
+      {
+        background: 'repeating-conic-gradient(from 0deg, #800080, #4b0082 10deg)',
+        buttonGradient: 'linear-gradient(145deg, #800080, #4b0082)',
+        textColor: '#00ff00'
+      },
+      {
+        background: 'repeating-linear-gradient(45deg, #006400, transparent 100px)',
+        buttonGradient: 'linear-gradient(145deg, #008000, #006400)',
+        textColor: '#ffff00'
+      },
+      {
+        background: 'radial-gradient(circle at 50% 50%, #ff00ff, #00ffff)',
+        buttonGradient: 'linear-gradient(145deg, #ff00ff, #00ffff)',
+        textColor: '#ffff00',
+        special: 'extreme-mode'
+      },
+      {
+        background: 'linear-gradient(45deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff)',
+        buttonGradient: 'conic-gradient(from 0deg, #ff0000, #00ff00, #0000ff, #ff0000)',
+        textColor: '#ffffff'
+      },
+      {
+        background: 'repeating-linear-gradient(-45deg, #000000, #000000 10px, #ff00ff 10px, #ff00ff 20px)',
+        buttonGradient: 'linear-gradient(90deg, #ff00ff, #00ffff)',
+        textColor: '#ffffff'
+      },
+      {
+        background: 'radial-gradient(circle at center, #000000, #440044)',
+        buttonGradient: 'linear-gradient(45deg, #ff00ff, #00ffff)',
+        textColor: '#00ff00'
+      },
+      {
+        background: 'repeating-radial-gradient(circle at var(--x) var(--y), #ff0000, #00ff00 100px)',
+        buttonGradient: 'conic-gradient(from var(--angle), #ff0000, #00ff00, #0000ff, #ff0000)',
+        textColor: '#ffffff',
+        special: 'ultra-chaos-mode'
+      },
+      {
+        background: 'linear-gradient(var(--angle), rgba(255,0,0,0.5), rgba(0,255,0,0.5)), repeating-linear-gradient(-45deg, #000 0px, #000 10px, transparent 10px, transparent 20px)',
+        buttonGradient: 'radial-gradient(circle at var(--x) var(--y), #ff0000, #00ff00)',
+        textColor: '#ffffff',
+        special: 'glitch-reality'
+      }
+    ];
+
+    // Add this after the magicStyles array
+    const fiftyPressFeatures = [
+      {
+        level: 50,
+        name: "duplicateButtons",
+        action: () => {
+          const clone = button.cloneNode(true);
+          clone.style.position = 'fixed';
+          clone.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+          clone.style.top = Math.random() * (window.innerHeight - 80) + 'px';
+          document.body.appendChild(clone);
+          clone.addEventListener('click', handleButtonClick);
+        }
+      },
+      {
+        level: 100,
+        name: "popups",
+        action: () => {
+          const popup = document.createElement('div');
+          popup.style.position = 'fixed';
+          popup.style.padding = '20px';
+          popup.style.background = 'rgba(0,0,0,0.9)';
+          popup.style.border = '2px solid #fff';
+          popup.style.borderRadius = '10px';
+          popup.style.color = '#fff';
+          popup.style.zIndex = '1000';
+          popup.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+          popup.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+          popup.innerHTML = `<div style="text-align:center">
+            <h3 style="margin:0">🎉 Magic Alert! 🎉</h3>
+            <p style="margin:10px 0">You've pressed ${pressCount} times!</p>
+            </div>`;
+          document.body.appendChild(popup);
+          setTimeout(() => popup.remove(), 3000);
+        }
+      },
+      {
+        level: 150,
+        name: "crampedUI",
+        action: () => {
+          const ui = document.createElement('div');
+          ui.style.position = 'fixed';
+          ui.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+          ui.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+          ui.innerHTML = `
+            <div style="background:rgba(0,0,0,0.8);padding:10px;border-radius:5px;color:#fff;font-size:12px">
+              <div>Magic Level: ${pressCount}</div>
+              <div>Power: ${Math.floor(Math.random() * 100)}%</div>
+              <div>Status: Chaotic</div>
+            </div>
+          `;
+          document.body.appendChild(ui);
+        }
+      },
+      {
+        level: 200,
+        name: "realityWarp",
+        action: () => {
+          const elements = document.querySelectorAll('*');
+          elements.forEach(el => {
+            el.style.transition = 'all 0.3s ease';
+            el.style.transform = `
+              rotate(${Math.random() * 10 - 5}deg)
+              skew(${Math.random() * 10 - 5}deg)
+              scale(${0.9 + Math.random() * 0.2})
+            `;
+          });
+        }
+      }
+    ];
+
+    function createSpark(x, y) {
+      const spark = document.createElement('div');
+      spark.className = 'spark';
+      
+      // Randomize more properties
+      const size = Math.random() * 8 + 4;
+      const opacity = 0.5 + Math.random() * 0.5;
+      const blur = Math.random() * 3;
+      
+      spark.style.width = `${size}px`;
+      spark.style.height = `${size}px`;
+      spark.style.opacity = opacity;
+      spark.style.filter = `blur(${blur}px)`;
+      
+      // More dynamic movement
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 200 + 50;
+      const tx = Math.cos(angle) * distance;
+      const ty = Math.sin(angle) * distance;
+      
+      // Random shape
+      const shapes = ['50%', '0%', '20%'];
+      spark.style.borderRadius = shapes[Math.floor(Math.random() * shapes.length)];
+      
+      spark.style.setProperty('--tx', `${tx}px`);
+      spark.style.setProperty('--ty', `${ty}px`);
+      
+      document.body.appendChild(spark);
+      
+      spark.addEventListener('animationend', () => {
+        spark.remove();
+      });
+    }
+
+    function changeWebsiteStyle() {
+      const styleIndex = Math.floor(Math.random() * magicStyles.length); // Random style each time
+      const style = magicStyles[styleIndex];
+
+      document.body.style.background = style.background;
+      button.style.background = style.buttonGradient;
+      button.style.color = style.textColor;
+
+      // Remove previous special classes
+      document.body.classList.remove('extreme-mode', 'ultra-mode', 'chaos-mode', 'final-mode');
+
+      // Enhanced changes for 100+ presses
+      if (pressCount >= 100) {
+        // Random border radius for button
+        const borderRadius = Math.random() * 50 + 'px';
+        button.style.borderRadius = borderRadius;
+        
+        // Random animations
+        const animations = [
+          'buttonPulse 2s infinite',
+          'melt 3s infinite alternate',
+          'extreme-rainbow 1s infinite',
+          'reality-break 2s infinite'
+        ];
+        button.style.animation = animations[Math.floor(Math.random() * animations.length)];
+        
+        // Random background animation
+        document.body.style.backgroundSize = '400% 400%';
+        document.body.style.animation = 'psychedelic 20s infinite linear';
+        
+        // Random transforms
+        const rotation = Math.random() * 360;
+        const skewX = Math.random() * 45 - 22.5;
+        const skewY = Math.random() * 45 - 22.5;
+        const scale = 0.5 + Math.random() * 1.5;
+        
+        button.style.transform = `rotate(${rotation}deg) skew(${skewX}deg, ${skewY}deg) scale(${scale})`;
+        
+        // Random filters
+        const hueRotate = Math.random() * 360;
+        const contrast = 100 + Math.random() * 200;
+        const brightness = 100 + Math.random() * 100;
+        button.style.filter = `hue-rotate(${hueRotate}deg) contrast(${contrast}%) brightness(${brightness}%)`;
+        
+        // Random padding and margin
+        const padding = 10 + Math.random() * 40;
+        const margin = Math.random() * 20;
+        button.style.padding = `${padding}px`;
+        button.style.margin = `${margin}px`;
+      }
+
+      // Add a transition effect
+      document.body.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+      button.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+
+      // Update hint message based on count
+      let message = `<span class="highlight">MAGIC NUMBER ${pressCount} REACHED!</span><br>`;
+      if (pressCount >= 100) {
+        message += "REALITY IS BREAKING! CHAOS REIGNS!";
+      } else if (pressCount >= 50) {
+        message += "CHAOS MODE ACTIVATED! EVERYTHING IS CHANGING!";
+      } else if (pressCount >= 30) {
+        message += "The transformation intensifies!";
+      } else {
+        message += "The website has transformed!";
+      }
+
+      magicHint.innerHTML = message;
+      magicHint.classList.add('show');
+      setTimeout(() => {
+        magicHint.classList.remove('show');
+      }, 3000);
+    }
+
+    function handleButtonClick(e) {
+      const rect = e.target.getBoundingClientRect();
+      for (let i = 0; i < 20; i++) {
+        const x = rect.left + Math.random() * rect.width;
+        const y = rect.top + Math.random() * rect.height;
+        createSpark(x, y);
+      }
+
+      pressCount++;
+      counterNumber.textContent = pressCount;
+      counter.classList.add('visible');
+
+      // Show magic hint only after first press and not on magic numbers
+      if (pressCount === 1 && !hasShownInitialHint) {
+        magicHint.classList.add('show');
+        hasShownInitialHint = true;
+        setTimeout(() => {
+          magicHint.classList.remove('show');
+        }, 3000);
+      }
+
+      // Check for magic numbers (multiples of 10)
+      if (pressCount % 10 === 0) {
+        changeWebsiteStyle();
+      }
+
+      // Check for feature unlocks (multiples of 50)
+      if (pressCount % 50 === 0) {
+        const featureIndex = (pressCount / 50) - 1;
+        if (featureIndex < fiftyPressFeatures.length) {
+          const feature = fiftyPressFeatures[featureIndex];
+          feature.action();
+          
+          magicHint.innerHTML = `<span class="highlight">LEVEL ${pressCount} REACHED!</span><br>New Feature Unlocked: ${feature.name}!`;
+          magicHint.classList.add('show');
+          setTimeout(() => {
+            magicHint.classList.remove('show');
+          }, 3000);
+        }
+      }
+
+      // Change the font
+      const currentFont = fonts[pressCount % fonts.length];
+      e.target.style.fontFamily = currentFont;
+      counter.style.fontFamily = currentFont;
+
+      // New effects based on press count
+      if (pressCount === 11) {
+        button.style.animation = 'melt 1s forwards';
+        setTimeout(() => {
+          button.style.animation = '';
+        }, 1000);
+      }
+
+      if (pressCount >= 11 && pressCount <= 20) {
+        createBubbles();
+        addFloatingObject();
+      }
+
+      if (pressCount >= 21 && pressCount <= 30) {
+        button.style.animation = 'float 2s infinite';
+        createSpiral();
+        addRainbowGradient();
+      }
+
+      // Super chaos mode
+      if (pressCount > 200) {
+        document.body.style.setProperty('--x', `${Math.random() * 100}%`);
+        document.body.style.setProperty('--y', `${Math.random() * 100}%`);
+        document.body.style.setProperty('--angle', `${Math.random() * 360}deg`);
+
+        // Random button transformations
+        button.style.transform = `
+          perspective(${500 + Math.random() * 1000}px) 
+          rotateX(${Math.random() * 360}deg) 
+          rotateY(${Math.random() * 360}deg) 
+          scale(${0.5 + Math.random()})
+        `;
+
+        // Random filters
+        button.style.filter = `
+          hue-rotate(${Math.random() * 360}deg) 
+          contrast(${100 + Math.random() * 200}%) 
+          brightness(${100 + Math.random() * 100}%)
+          blur(${Math.random() * 2}px)
+        `;
+      }
+    }
+
+    function createBubbles() {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      // Set random size and position
+      bubble.style.width = Math.random() * 50 + 20 + 'px';
+      bubble.style.height = bubble.style.width;
+      bubble.style.left = Math.random() * window.innerWidth + 'px';
+      bubble.style.top = window.innerHeight + 'px';
+      document.body.appendChild(bubble);
+      
+      setTimeout(() => bubble.remove(), 3000);
+    }
+
+    function addFloatingObject() {
+      const objects = ['🧦', '☕', '🎷', '🎈', '🦆'];
+      const obj = document.createElement('div');
+      obj.textContent = objects[Math.floor(Math.random() * objects.length)];
+      obj.style.cssText = `
+        position: fixed;
+        font-size: 2em;
+        animation: float 4s linear forwards;
+      `;
+      document.body.appendChild(obj);
+      setTimeout(() => obj.remove(), 4000);
+    }
+
+    function createSpiral() {
+      const spiralEffect = document.createElement('div');
+      spiralEffect.className = 'fish';
+      spiralEffect.style.left = Math.random() * window.innerWidth + 'px';
+      spiralEffect.style.top = Math.random() * window.innerHeight + 'px';
+      document.body.appendChild(spiralEffect);
+      setTimeout(() => spiralEffect.remove(), 4000);
+    }
+
+    function addRainbowGradient() {
+      const wing = document.createElement('div');
+      wing.className = 'wing';
+      wing.style.left = Math.random() * window.innerWidth + 'px';
+      wing.style.top = Math.random() * window.innerHeight + 'px';
+      document.body.appendChild(wing);
+      setTimeout(() => wing.remove(), 4000);
+    }
+
+    // Update the event listener
+    button.addEventListener('click', handleButtonClick);
+  </script>
+</body></html>
